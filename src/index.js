@@ -10,19 +10,77 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers
+
+  if(!username)
+    return response.status(400).json({ error: "username is required"})
+
+  const getUserByUsername = users.find(user => user.username === username)
+
+  if(!getUserByUsername)
+    return response.status(404).json({ error: "user not found"})
+
+  request.user = getUserByUsername
+
+  return next()
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request
+
+  const userIsPro = user.pro
+
+  if(userIsPro)
+    return next()
+
+  if(!userIsPro && user.todos.length < 10)
+    return next()
+
+  return response.status(403).json({ error: "You need to be pro user to do this"})
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers
+  const { id } = request.params
+
+  if(!username || !id)
+    return response.status(400).json({ error: "Username/id is required"})
+
+  const idIsUuid = validate(id)
+
+  if(!idIsUuid)
+    return response.status(400).json({ error: "Id is invalid format"})
+
+  const getUserByUsername = users.find(user => user.username === username)
+
+  if(!getUserByUsername)
+    return response.status(404).json({ error: "user not found"})
+
+  const getTodoById = getUserByUsername.todos.find(todo => todo.id = id)
+
+  if(!getTodoById)
+    return response.status(404).json({ error: "user not found"})
+
+  request.todo = getTodoById
+  request.user = getUserByUsername
+
+  return next()
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params
+
+  if(!id)
+    return response.status(400).json({ error: "Id is required"})
+
+  const getUserById = users.find(user => user.id === id)
+
+  if(!getUserById)
+    return response.status(404).json({ error: "User not found"})
+
+  request.user = getUserById
+
+  return next()
 }
 
 app.post('/users', (request, response) => {
